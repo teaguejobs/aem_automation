@@ -1,0 +1,40 @@
+image: python:3.11
+
+stages:
+  - prepare
+  - deploy_dev
+  - promote_to_tst
+  - promote_to_ppe
+
+variables:
+  ENV_NAME: "DEV"
+  RELEASE_TAG: "v1.0.0"
+
+prepare:
+  script:
+    - pip install -r requirements.txt
+    - python scripts/update_yaml_files.py
+    - python scripts/create_gitlab_mr.py
+
+deploy_dev:
+  script:
+    - python scripts/create_aws_parameters.py
+    - python scripts/jenkins_trigger.py
+
+promote_to_tst:
+  when: manual
+  variables:
+    ENV_NAME: "TST"
+    RELEASE_TAG: "v1.0.1"
+  script:
+    - python scripts/update_yaml_files.py
+    - python scripts/jenkins_trigger.py
+
+promote_to_ppe:
+  when: manual
+  variables:
+    ENV_NAME: "PPE"
+    RELEASE_TAG: "v1.0.2"
+  script:
+    - python scripts/update_yaml_files.py
+    - python scripts/jenkins_trigger.py
